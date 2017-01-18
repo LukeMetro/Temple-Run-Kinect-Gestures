@@ -14,14 +14,16 @@ namespace Kinect_Keystroke_Emulation
     {
         // Structs to hold skeleton data
         private static Skeleton[] skeletonData;
-        private static long frameCount;
+        private static bool waitingForGest;
+        private static float savedYPosition;
 
         static void Main(string[] args)
         {
             // Create object for keystroke emulation
             InputSimulator sim = new InputSimulator();
 
-            frameCount = 0; // Initialize frame counter
+            // Initialize tracking variable
+            waitingForGest = false;
 
             // Connect to Kinect , enable skeletal tracking, & start stream
             var kinect = KinectSensor.KinectSensors.Single();
@@ -59,10 +61,33 @@ namespace Kinect_Keystroke_Emulation
                     if (foundSkeletons.Count() != 0)
                     {
                         var trackedSkeleton = foundSkeletons.MinBy(i => i.Position.Z);
-                        Console.WriteLine("Frame {3}: TrackedSkeleton position: {0} {1} {2}", 
-                            trackedSkeleton.Position.X, trackedSkeleton.Position.Y, trackedSkeleton.Position.Z,
-                            frameCount);
-                        frameCount++;
+                        if (waitingForGest == false) // Take note of skeleton Y-coordinate
+                        {
+                            savedYPosition = trackedSkeleton.Joints[JointType.Head].Position.Y;
+                            waitingForGest = true;
+                            Thread.Sleep(200);
+
+                        } else // waiting for gesture
+                        {
+                            waitingForGest = false;
+                            var newYPosition = trackedSkeleton.Joints[JointType.Head].Position.Y;
+                            var gestureDetected = false;
+                            //Console.WriteLine("Saved Y Position: {0}", savedYPosition);
+                            //Console.WriteLine("New Position: {0}", newYPosition);
+                            if (newYPosition >= savedYPosition * 1.20)
+                            {
+                                Console.WriteLine("Jump Detected!");
+                                gestureDetected = true;
+                            }
+                            else if (newYPosition <= savedYPosition * .80)
+                            {
+                                Console.WriteLine("Duck Detected!");
+                                gestureDetected = true;
+                            }
+                            // Prevent double detection (such as jump when returning from duck)
+                            if (gestureDetected)
+                                Thread.Sleep(600);
+                        }
                     }
                 }
             }
