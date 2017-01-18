@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using WindowsInput;
 using Microsoft.Kinect;
 using MoreLinq;
+using WindowsInput.Native;
 
 namespace Kinect_Keystroke_Emulation
 {
@@ -16,11 +17,12 @@ namespace Kinect_Keystroke_Emulation
         private static Skeleton[] skeletonData;
         private static bool waitingForGest;
         private static float savedYPosition;
+        private static InputSimulator sim;
 
         static void Main(string[] args)
         {
             // Create object for keystroke emulation
-            InputSimulator sim = new InputSimulator();
+            sim = new InputSimulator();
 
             // Initialize tracking variable
             waitingForGest = false;
@@ -77,11 +79,13 @@ namespace Kinect_Keystroke_Emulation
                             if (newYPosition >= savedYPosition * 1.20)
                             {
                                 Console.WriteLine("Jump Detected!");
+                                sim.Keyboard.KeyPress(VirtualKeyCode.VK_W);
                                 gestureDetected = true;
                             }
                             else if (newYPosition <= savedYPosition * .80)
                             {
                                 Console.WriteLine("Duck Detected!");
+                                sim.Keyboard.KeyPress(VirtualKeyCode.VK_S);
                                 gestureDetected = true;
                             }
                             // Prevent double detection (such as jump when returning from duck)
