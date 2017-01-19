@@ -17,6 +17,7 @@ namespace Kinect_Keystroke_Emulation
         private static Skeleton[] skeletonData;
         private static bool waitingForGest;
         private static float savedYPosition;
+        private static float savedXPosition;
         private static InputSimulator sim;
 
         static void Main(string[] args)
@@ -66,6 +67,7 @@ namespace Kinect_Keystroke_Emulation
                         if (waitingForGest == false) // Take note of skeleton Y-coordinate
                         {
                             savedYPosition = trackedSkeleton.Joints[JointType.Head].Position.Y;
+                            savedXPosition = trackedSkeleton.Joints[JointType.Head].Position.X;
                             waitingForGest = true;
                             Thread.Sleep(200);
 
@@ -73,19 +75,32 @@ namespace Kinect_Keystroke_Emulation
                         {
                             waitingForGest = false;
                             var newYPosition = trackedSkeleton.Joints[JointType.Head].Position.Y;
+                            var newXPosition = trackedSkeleton.Joints[JointType.Head].Position.X;
                             var gestureDetected = false;
-                            //Console.WriteLine("Saved Y Position: {0}", savedYPosition);
-                            //Console.WriteLine("New Position: {0}", newYPosition);
-                            if (newYPosition >= savedYPosition * 1.20)
+                            //Console.WriteLine("Saved X Position: {0}", savedXPosition);
+                            //Console.WriteLine("New X Position: {0}", newXPosition);
+                            if (newYPosition >= savedYPosition + 0.1)
                             {
                                 Console.WriteLine("Jump Detected!");
                                 sim.Keyboard.KeyPress(VirtualKeyCode.VK_W);
                                 gestureDetected = true;
                             }
-                            else if (newYPosition <= savedYPosition * .80)
+                            else if (newYPosition <= savedYPosition - 0.1)
                             {
                                 Console.WriteLine("Duck Detected!");
                                 sim.Keyboard.KeyPress(VirtualKeyCode.VK_S);
+                                gestureDetected = true;
+                            }
+                            if (newXPosition >= savedXPosition + 0.1)
+                            {
+                                Console.WriteLine("Right Dodge Detected!");
+                                sim.Keyboard.KeyPress(VirtualKeyCode.VK_D);
+                                gestureDetected = true;
+                            }
+                            else if (newXPosition <= savedXPosition - 0.1)
+                            {
+                                Console.WriteLine("Left Dodge Detected!");
+                                sim.Keyboard.KeyPress(VirtualKeyCode.VK_A);
                                 gestureDetected = true;
                             }
                             // Prevent double detection (such as jump when returning from duck)
@@ -98,8 +113,3 @@ namespace Kinect_Keystroke_Emulation
         }
     }
 }
-// How to simulate key presses:
-// sim.Keyboard.KeyPress(VirtualKeyCode.VK_W);
-// sim.Keyboard.KeyPress(VirtualKeyCode.VK_A);
-// sim.Keyboard.KeyPress(VirtualKeyCode.VK_S);
-// sim.Keyboard.KeyPress(VirtualKeyCode.VK_D);
